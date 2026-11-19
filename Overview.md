@@ -54,8 +54,23 @@ flowchart TD
 
 ## Nhúng thuật toán + mô phỏng trong môi trường thực tế ảo
 ### NVIDIA Iaac Sim (Issac Lab / Pegasus Simulator)
+- Do hoa cao
+- Phu hop voi viec mo phong cam bien Camera/Lidar, vat li PhysX GPU
+- Co ho tro UAV + PX4 + ROS 2
+- Yeu cau VRAM > 8Gb
 
 ### MuJoCo (MuJoCo MJX)
+- Do chinh xac vat li va tiep xuc/day cap hang
+- Chay song song GPU -> Nhe hon Issac Sim
+- Tu dong ket noi ROS2
+- Co plugin ROS2 / de boc bang Python/C++
+- Yeu cau khong qua cao, co the chay muot ngay ca voi 4Gb VRAM
+
+
+### Genesis
+- Da vat li tren GPU (vat ran, day cap/vat mem, chat long), chay cuc nhanh bang Python
+- Tu dong ket noi qua ROS2, Python / UDP
+- Yeu cau: GPU NVIDIA (CUDA) hoac AMD/Intel, nhe hon Issac Sim (4-6Gb VRAM)
 
 ### Chuyên dụng cho hàng không (UAV)
 - Flightmare (Đồ họa đẹp, tốc độ cao)
