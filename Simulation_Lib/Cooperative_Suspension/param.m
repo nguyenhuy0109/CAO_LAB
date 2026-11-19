@@ -1,0 +1,116 @@
+%% PARAM - Tham so, gia tri dat va dieu kien dau cho Pay_load
+% Chay: param
+% Don vi: m, s, kg, rad. He quan tinh co truc z huong xuong.
+% R = Rz(yaw)*Ry(pitch)*Rx(roll): tu he than/tai sang he quan tinh.
+% Nguon: phan V cua bai bao Adaptive Cooperative Load Transportation
+% by a Team of Quadrotors With Multiple Constraint Requirements.
+%
+% Script chi khai bao bien; KHONG sua hay tu dong chay mo hinh Simulink.
+% Cac khoi Generate_pdi va quy dao tai hien co van duoc noi voi Clock.
+% *_ref la function handle de tinh quy dao; *_0 la gia tri dat tai t=0.
+% *_init la trang thai THUC ban dau, khac voi gia tri dat.
+
+%% 1. Tham so vat ly
+g = 9.81;
+ez = [0; 0; 1];
+
+m1 = 1; m2 = 1; m3 = 1; m4 = 1;
+mD = [m1; m2; m3; m4];
+m = 1; % Bon khoi dong luc hoc hien dung cung tham so m.
+
+Iv = diag([0.109, 0.103, 0.0625]);
+J1 = Iv; J2 = Iv; J3 = Iv; J4 = Iv;
+
+mL = 2;
+JL = diag([0.095, 0.14, 0.2388]);
+
+l1 = 2.5; l2 = 2.5; l3 = 2.5; l4 = 2.5;
+ell = [l1; l2; l3; l4];
+
+r1 = [ 0.25; -0.20; -0.45];
+r2 = [-0.50; -0.40; -0.15];
+r3 = [-0.50;  0.40;  0.15];
+r4 = [ 0.50;  0.40;  0.00];
+joint_matrix = [r1, r2, r3, r4];
+
+
+%% 3. Trang thai THUC ban dau theo phan mo phong cua bai bao
+pL_init = [0.6; 0.6; 4.5];
+vL_init = zeros(3,1);
+angle_L_init = [-0.2; -0.2; 0.3];
+omega_L_init = zeros(3,1); % Van toc goc trong he tai.
+RL_init = rotation_zyx_param(angle_L_init);
+
+
+e1 = [0.2208, -0.2208, 0.95]';
+e2 = [-0.1407, 0.1407, 0.98]';
+e3 = [-0.1407, -0.1407, 0.98]';
+e4 = [-0.1719, -0.1719, 0.98]';
+
+
+p1_init = pL_init + RL_init*r1 - l1*e1; 
+p2_init = pL_init + RL_init*r2 - l2*e2;
+p3_init = pL_init + RL_init*r3 - l3*e3; 
+p4_init = pL_init + RL_init*r4 - l4*e4;
+v1_init = zeros(3,1); v2_init = zeros(3,1);
+v3_init = zeros(3,1); v4_init = zeros(3,1);
+
+angle1_init = [0;0;0.3]; angle2_init = [0;0;0.3];
+angle3_init = [0;0;0.3]; angle4_init = [0;0;0.3];
+omega1_init = zeros(3,1); omega2_init = zeros(3,1);
+omega3_init = zeros(3,1); omega4_init = zeros(3,1);
+
+xL_init = [pL_init; vL_init; angle_L_init; omega_L_init];
+
+
+%% 4. Cau truc P cho giao dien Load_dynamic da trao doi
+% Neu ban da thay doi ten truong trong Load_dynamic.m, doi ten tuong ung
+% tai day. Script khong kiem chung hay thay the file S-function ben ngoai.
+P = struct();
+P.mL = mL;
+P.JL = JL;
+P.mD = mD;
+P.r = joint_matrix;
+P.ell = ell;
+P.x0 = xL_init;
+P.g = g;
+% Hieu chinh rang buoc Baumgarte cua mo hinh day; khong phai gain bai bao.
+P.wn = 5;
+P.zeta = 1;
+
+
+%% Ham cuc bo: quy dao UAV va dao ham giai tich
+function result = uav_reference_param(t,r,ell,varphi,lookahead,velocity)
+assert(isscalar(t) && isfinite(t), 't phai la scalar huu han.');
+p = [0.2*t-0.35;3.5*sin(0.15*t);-0.2*t+0.01*sin(25*t)-1.5];
+v = [0.2;0.525*cos(0.15*t);-0.2+0.25*cos(25*t)];
+tf = t+lookahead;
+pf = [0.2*tf-0.35;3.5*sin(0.15*tf);-0.2*tf+0.01*sin(25*tf)-1.5];
+vf = [0.2;0.525*cos(0.15*tf);-0.2+0.25*cos(25*tf)];
+d = p-pf;
+D = norm(d);
+assert(D>1e-8, 'Huong day dat khong xac dinh.');
+q = d/D;
+qd = ((v-vf)-q*(q.'*(v-vf)))/D;
+ed = [varphi*q(1);varphi*q(2);sqrt(1-varphi^2+varphi^2*q(3)^2)];
+edd = [varphi*qd(1);varphi*qd(2);varphi^2*q(3)*qd(3)/ed(3)];
+result = zeros(3,4);
+for k = 1:4
+    if velocity
+        result(:,k) = v-ell(k)*edd;
+    else
+        result(:,k) = p+r(:,k)-ell(k)*ed;
+    end
+end
+end
+
+function R = rotation_zyx_param(a)
+cp=cos(a(1)); sp=sin(a(1)); ct=cos(a(2)); st=sin(a(2));
+cy=cos(a(3)); sy=sin(a(3));
+R=[cy*ct,cy*st*sp-sy*cp,cy*st*cp+sy*sp; ...
+   sy*ct,sy*st*sp+cy*cp,sy*st*cp-cy*sp; ...
+   -st,ct*sp,ct*cp];
+end
+
+
+joint_matrix = [r1; r2; r3; r4];
