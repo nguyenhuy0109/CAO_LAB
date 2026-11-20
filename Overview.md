@@ -76,3 +76,22 @@ flowchart TD
 - Flightmare (Đồ họa đẹp, tốc độ cao)
 - X-Plane / FlightGear (Mô phỏng khí động học thực tế)
 - RotorTM (Mô phỏng UAV bầy đàn mang tải treo dây cáp)
+
+## Nguyen li hoat dong
+### RotorTM
+- Su dung ket gop voi Rviz va Ros1 noetic
+- Tao cac mo hinh drone va day cap bang file yaml
+- Mo phong dong hoc + dieu khien bang cac node Ros1 bang Python
+
+### MuJoCo
+- Su dung thu vien tinh toan vat li viet bang C/C++
+- MuJoCo la mot thu vien: Chuong trinh nam giu vong lap chinh, con MuJoCo chi dong vai tro nhu mot ham toan hoc. Moi chu ki thoi gian, code day lenh dieu khien vao va goi ham mj_step() de MuJoCo tinh ra trang thai vat li tiep theo.
+
+
+
+
+# Huong dan su dung phan mem mo phogn
+## RotorTM
+
+## MuJoCo
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/2fceff1f-5476-41a1-afdd-2ba1990e63e9" />
